@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cabin Reservation</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 32px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 28px;
+            color: #1f3c5b;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border: 1px solid #c9d2dc;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .section-title {
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: #1f3c5b;
+            font-size: 18px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        #message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success {
+            display: block !important;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .error {
+            display: block !important;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 22px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Cabin Reservation</h2>
+
+        <form id="reservationForm">
+
+            <div class="form-group">
+                <label for="deckNumber">Deck</label>
+
+                <select id="deckNumber" required>
+                    <option value="">Select Deck</option>
+                    <option value="1">Deck 1</option>
+                    <option value="2">Deck 2</option>
+                    <option value="3">Deck 3</option>
+                </select>
+            </div>
+
+
+            <div class="form-group">
+                <label for="cabinNumber">Cabin</label>
+
+                <select id="cabinNumber" required>
+                    <option value="">Select Cabin</option>
+                </select>
+            </div>
+
+
+            <div class="section-title">
+                Passenger 1
+            </div>
+
+            <div class="form-group">
+                <label for="name1">Name</label>
+
+                <input
+                        type="text"
+                        id="name1"
+                        placeholder="Enter passenger name"
+                        required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="age1">Age</label>
+
+                <input
+                        type="number"
+                        id="age1"
+                        placeholder="Enter age"
+                        min="0"
+                        required
+                >
+            </div>
+
+
+            <div class="section-title">
+                Passenger 2
+            </div>
+
+            <div class="form-group">
+                <label for="name2">Name</label>
+
+                <input
+                        type="text"
+                        id="name2"
+                        placeholder="Enter passenger name"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="age2">Age</label>
+
+                <input
+                        type="number"
+                        id="age2"
+                        placeholder="Enter age"
+                        min="0"
+                >
+            </div>
+
+
+            <button type="submit">
+                Reserve Cabin
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const deckSelect =
+        document.getElementById("deckNumber");
+
+    const cabinSelect =
+        document.getElementById("cabinNumber");
+
+    const message =
+        document.getElementById("message");
+
+
+    function showMessage(text, type) {
+
+        message.className = "";
+
+        message.innerHTML = text;
+
+        if (type === "success") {
+            message.classList.add("success");
+        } else {
+            message.classList.add("error");
+        }
+    }
+
+
+    function clearMessage() {
+
+        message.innerHTML = "";
+        message.className = "";
+        message.style.display = "none";
+    }
+
+
+    async function loadAvailableCabins() {
+
+        const deckNumber =
+            deckSelect.value;
+
+        cabinSelect.innerHTML =
+            '<option value="">Select Cabin</option>';
+
+        clearMessage();
+
+        if (!deckNumber) {
+            return;
+        }
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/cabins/available?deckNumber=${deckNumber}`
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Unable to retrieve available cabins."
+                );
+            }
+
+            const cabins =
+                await response.json();
+
+
+            if (cabins.length === 0) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value = "";
+                option.textContent =
+                    "No cabins available";
+
+                option.disabled = true;
+
+                cabinSelect.appendChild(option);
+
+                showMessage(
+                    "No cabins are currently available on Deck "
+                    + deckNumber
+                    + ".",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            cabins.forEach(function (cabin) {
+
+                const option =
+                    document.createElement("option");
+
+                option.value =
+                    cabin.cabinNumber;
+
+                const availableSeats =
+                    cabin.capacity -
+                    cabin.passengers.length;
+
+                option.textContent =
+                    cabin.cabinNumber
+                    + " - "
+                    + availableSeats
+                    + " seat(s) available";
+
+                cabinSelect.appendChild(option);
+            });
+
+        } catch (error) {
+
+            showMessage(
+                "Unable to load available cabins.",
+                "error"
+            );
+
+            console.error(error);
+        }
+    }
+
+
+    deckSelect.addEventListener(
+        "change",
+        loadAvailableCabins
+    );
+
+
+    document
+        .getElementById("reservationForm")
+        .addEventListener(
+            "submit",
+            async function (event) {
+
+                event.preventDefault();
+
+                clearMessage();
+
+                const selectedCabin =
+                    cabinSelect.value;
+
+
+                if (!selectedCabin) {
+
+                    const errorMessage =
+                        "Please select an available cabin.";
+
+                    alert(errorMessage);
+
+                    showMessage(
+                        errorMessage,
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                const passengers = [];
+
+
+                const name1 =
+                    document
+                        .getElementById("name1")
+                        .value
+                        .trim();
+
+                const age1 =
+                    document
+                        .getElementById("age1")
+                        .value;
+
+
+                if (!name1 || age1 === "") {
+
+                    const errorMessage =
+                        "Passenger 1 name and age are required.";
+
+                    alert(errorMessage);
+
+                    showMessage(
+                        errorMessage,
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                passengers.push({
+                    name: name1,
+                    age: parseInt(age1)
+                });
+
+
+                const name2 =
+                    document
+                        .getElementById("name2")
+                        .value
+                        .trim();
+
+                const age2 =
+                    document
+                        .getElementById("age2")
+                        .value;
+
+
+                if (
+                    (name2 && age2 === "") ||
+                    (!name2 && age2 !== "")
+                ) {
+
+                    const errorMessage =
+                        "Please enter both name and age for Passenger 2.";
+
+                    alert(errorMessage);
+
+                    showMessage(
+                        errorMessage,
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                if (name2 && age2 !== "") {
+
+                    passengers.push({
+                        name: name2,
+                        age: parseInt(age2)
+                    });
+                }
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/reservations",
+                            {
+                                method: "POST",
+
+                                headers: {
+                                    "Content-Type":
+                                        "application/json"
+                                },
+
+                                body: JSON.stringify({
+                                    cabinNumber:
+                                    selectedCabin,
+
+                                    passengers:
+                                    passengers
+                                })
+                            }
+                        );
+
+
+                    const result =
+                        await response.json();
+
+
+                    if (response.ok) {
+
+                        const successMessage =
+                            "Reservation successful for cabin "
+                            + selectedCabin
+                            + ".";
+
+                        alert(successMessage);
+
+                        showMessage(
+                            successMessage,
+                            "success"
+                        );
+
+                        document
+                            .getElementById(
+                                "reservationForm"
+                            )
+                            .reset();
+
+                        cabinSelect.innerHTML =
+                            '<option value="">Select Cabin</option>';
+
+                    } else {
+
+                        const errorMessage =
+                            result.message
+                            || "Reservation failed.";
+
+                        alert(errorMessage);
+
+                        showMessage(
+                            errorMessage,
+                            "error"
+                        );
+                    }
+
+                } catch (error) {
+
+                    const errorMessage =
+                        "Something went wrong while processing the reservation.";
+
+                    alert(errorMessage);
+
+                    showMessage(
+                        errorMessage,
+                        "error"
+                    );
+
+                    console.error(error);
+                }
+            }
+        );
+
+</script>
+
+</body>
+</html>
